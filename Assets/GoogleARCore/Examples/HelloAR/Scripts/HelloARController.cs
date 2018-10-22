@@ -48,7 +48,13 @@ namespace GoogleARCore.Examples.HelloAR
         /// <summary>
         /// A model to place when a raycast from a user touch hits a plane.
         /// </summary>
-        public GameObject AndyPlanePrefab;
+        public GameObject player;
+
+        private bool playerCreated = false;
+
+        public float forwardSpeed = 7.0f;
+
+        private Vector3 firstTouchPoint = new Vector3(0,0,0);
 
         /// <summary>
         /// A model to place when a raycast from a user touch hits a feature point.
@@ -98,12 +104,20 @@ namespace GoogleARCore.Examples.HelloAR
             SearchingForPlaneUI.SetActive(showSearchingUI);
 
             // If the player has not touched the screen, we are done with this update.
-            Touch touch;
-            if (Input.touchCount < 1 || (touch = Input.GetTouch(0)).phase != TouchPhase.Began)
-            {
-                return;
+            //Touch touch;
+            //Touch[] touches = Input.touches;
+
+            foreach(Touch touch in Input.touches) {
+                if (touch.phase != TouchPhase.Ended && touch.phase != TouchPhase.Canceled) {
+                    doOnTouch(touch);
+                } else {
+                    firstTouchPoint = new Vector3(0f, 0f, 0f);
+                }
             }
 
+        }
+
+        private void doOnTouch(Touch touch) {
             // Raycast against the location the player touched to search for planes.
             TrackableHit hit;
             TrackableHitFlags raycastFilter = TrackableHitFlags.PlaneWithinPolygon |
@@ -111,16 +125,18 @@ namespace GoogleARCore.Examples.HelloAR
 
             if (Frame.Raycast(touch.position.x, touch.position.y, raycastFilter, out hit))
             {
+                Debug.Log("TESTEST, is a hit!");
                 // Use hit pose and camera pose to check if hittest is from the
                 // back of the plane, if it is, no need to create the anchor.
                 if ((hit.Trackable is DetectedPlane) &&
                     Vector3.Dot(FirstPersonCamera.transform.position - hit.Pose.position,
                         hit.Pose.rotation * Vector3.up) < 0)
                 {
-                    Debug.Log("Hit at back of the current DetectedPlane");
+                    Debug.Log("TESTEST Hit at back of the current DetectedPlane");
                 }
-                else
+                else if (!playerCreated)
                 {
+                    Debug.Log("TESTEST, player not created");
                     // Choose the Andy model for the Trackable that got hit.
                     GameObject prefab;
                     if (hit.Trackable is FeaturePoint)
@@ -129,23 +145,65 @@ namespace GoogleARCore.Examples.HelloAR
                     }
                     else
                     {
-                        prefab = AndyPlanePrefab;
+                        prefab = player;
                     }
 
                     // Instantiate Andy model at the hit pose.
-                    var andyObject = Instantiate(prefab, hit.Pose.position, hit.Pose.rotation);
+                    player = Instantiate(prefab, hit.Pose.position, hit.Pose.rotation);
+                    
 
                     // Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
-                    andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
+                    player.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
 
                     // Create an anchor to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
                     var anchor = hit.Trackable.CreateAnchor(hit.Pose);
 
                     // Make Andy model a child of the anchor.
-                    andyObject.transform.parent = anchor.transform;
+                    player.transform.parent = anchor.transform;
+                    playerCreated = true;
                 }
+                else {
+                    if (firstTouchPoint.x <= 0f && firstTouchPoint.y <= 0f && firstTouchPoint.z <= 0f)
+                        {
+                            Debug.Log("TESTEST, firstTouchPoint, x: " + touch.position.x + ", y: " + touch.position.y);
+                            firstTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
+                        }
+                        else
+                        {
+                            // calculate difference and move player
+                            Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
+                            Vector3 offset = Vector3.ClampMagnitude(currentTouchPoint - firstTouchPoint, 1.0f);
+                            Debug.Log("TESTEST, calculating offset  and moving unitychan" + offset);
+                            player.GetComponent<UnityChanControl>().MoveUnityChan(offset);
+                        }
+                        
+                }
+                //else
+                //{
+                //    Debug.Log("TESTEST, player created!");
+                //    // move unitychan
+                //    if (firstTouchPoint.x <= 0f && firstTouchPoint.y <= 0f && firstTouchPoint.z <= 0f)
+                //    {
+                //        Debug.Log("TESTEST, firstTouchPoint, x: " + touch.position.x + ", y: " + touch.position.y);
+                //        firstTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
+                //    }
+                //    else
+                //    {
+                //        // calculate difference and move player
+                //        Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
+                //        Vector3 offset = Vector3.ClampMagnitude(currentTouchPoint - firstTouchPoint, 1.0f);
+                //        Debug.Log("TESTEST, calculating offset " + offset);
+                //        moveUnityChan(offset);
+                //    }
+
+                //}
             }
+        }
+
+        private void moveUnityChan(Vector3 direction) {
+            GameObject unityChan = GameObject.Find("Player");
+            unityChan.transform.Translate(direction * forwardSpeed * Time.deltaTime);
         }
 
         /// <summary>
