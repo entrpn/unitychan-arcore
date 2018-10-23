@@ -6,7 +6,7 @@ public class UnityChanControl : MonoBehaviour {
 
     public float animSpeed = 1.5f;
 
-    public float forwardSpeed = 7.0f;
+    public float forwardSpeed = .2f;
 
     public float backwardSpeed = 2.0f;
 
@@ -18,58 +18,54 @@ public class UnityChanControl : MonoBehaviour {
 
     private Rigidbody rb;
 
+    private Animator animator;
+
     private Vector3 firstTouchPoint = new Vector3(0, 0, 0);
+
+    private Transform startMarker;
+    private Vector3 endMarker;
+    private float journeyLen = 0;
+    private float startTime = 0;
 
     // Use this for initialization
     void Start () {
         Debug.Log("UnityChanControl start()");
         rb = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
 	}
-	
-    private void Update()
-    {
-        //Vector3 moveVector = (Vector3.right * joystick.Horizontal + Vector3.forward * joystick.Vertical);
 
-        //if (moveVector != Vector3.zero)
-        //{
-        //    transform.rotation = Quaternion.LookRotation(moveVector);
-        //    transform.Translate(moveVector * forwardSpeed * Time.deltaTime, Space.World);
-        //}
-        //foreach (Touch touch in Input.touches)
-        //{
-        //    if (touch.phase != TouchPhase.Ended && touch.phase != TouchPhase.Canceled)
-        //    {
-        //        doOnTouch(touch);
-        //    }
-        //    else
-        //    {
-        //        firstTouchPoint = new Vector3(0f, 0f, 0f);
-        //    }
-        //}
+    public void setRunningAnimation() {
     }
 
-    //private void doOnTouch(Touch touch)
-    //{
-    //    Debug.Log("TESTEST, UnityChanControl doOnTouch()");
-    //    // move unitychan
-    //    if (firstTouchPoint.x <= 0f && firstTouchPoint.y <= 0f && firstTouchPoint.z <= 0f)
-    //    {
-    //        Debug.Log("TESTEST, firstTouchPoint, x: " + touch.position.x + ", y: " + touch.position.y);
-    //        firstTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-    //    }
-    //    else
-    //    {
-    //        // calculate difference and move player
-    //        Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-    //        Vector3 offset = currentTouchPoint - firstTouchPoint;
-    //        Debug.Log("TESTEST, calculating offset " + offset);
-    //        moveUnityChan(Vector3.ClampMagnitude(offset, 1.0f));
-    //    }
-    //}
+    public void setJumpAnimation() {
+        setAnimation("Jump");
+    }
 
-    public void MoveUnityChan(Vector3 direction)
+    private void setAnimation(string AnimationString) {
+        if (!animator.IsInTransition(0)) {
+            animator.SetBool(AnimationString, true);
+        }
+    }
+	
+    void Update()
     {
-        //rb.AddForce(direction);
-        transform.Translate(direction * forwardSpeed * Time.deltaTime);
+        if (journeyLen > 0) {
+            float distCovered = (Time.time - startTime) * forwardSpeed;
+            float fracJourney = distCovered / journeyLen;
+            transform.position = Vector3.Lerp(startMarker.position, endMarker, fracJourney);
+        }
+    }
+
+
+    public void MoveUnityChan(Vector3 endPos)
+    {
+        startMarker = this.transform;
+        endMarker = endPos;
+        startTime = Time.time;
+        journeyLen = Vector3.Distance(startMarker.position, endMarker);
+
+
+        //rb.AddForce(direction * forwardSpeed * Time.deltaTime);
+        //transform.Translate(direction * forwardSpeed * Time.deltaTime);
     }
 }

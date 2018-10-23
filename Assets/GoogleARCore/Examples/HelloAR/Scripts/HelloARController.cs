@@ -164,47 +164,22 @@ namespace GoogleARCore.Examples.HelloAR
                     playerCreated = true;
                 }
                 else {
-                    if (firstTouchPoint.x <= 0f && firstTouchPoint.y <= 0f && firstTouchPoint.z <= 0f)
-                        {
-                            Debug.Log("TESTEST, firstTouchPoint, x: " + touch.position.x + ", y: " + touch.position.y);
-                            firstTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-                        }
-                        else
-                        {
-                            // calculate difference and move player
-                            Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-                            Vector3 offset = Vector3.ClampMagnitude(currentTouchPoint - firstTouchPoint, 1.0f);
-                            Debug.Log("TESTEST, calculating offset  and moving unitychan" + offset);
-                            player.GetComponent<UnityChanControl>().MoveUnityChan(offset);
-                        }
+                    // calculate difference and move player
+                    //Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
+                    //Vector3 offset = Vector3.ClampMagnitude(currentTouchPoint - firstTouchPoint, 1.0f);
+                    //Debug.Log("TESTEST, calculating offset  and moving unitychan" + offset);
+                    UnityChanControl unityChanControl = player.GetComponent<UnityChanControl>();
+                    unityChanControl.setJumpAnimation();
+                    unityChanControl.MoveUnityChan(hit.Pose.position);
                         
                 }
-                //else
-                //{
-                //    Debug.Log("TESTEST, player created!");
-                //    // move unitychan
-                //    if (firstTouchPoint.x <= 0f && firstTouchPoint.y <= 0f && firstTouchPoint.z <= 0f)
-                //    {
-                //        Debug.Log("TESTEST, firstTouchPoint, x: " + touch.position.x + ", y: " + touch.position.y);
-                //        firstTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-                //    }
-                //    else
-                //    {
-                //        // calculate difference and move player
-                //        Vector3 currentTouchPoint = new Vector3(touch.position.x, 0, touch.position.y);
-                //        Vector3 offset = Vector3.ClampMagnitude(currentTouchPoint - firstTouchPoint, 1.0f);
-                //        Debug.Log("TESTEST, calculating offset " + offset);
-                //        moveUnityChan(offset);
-                //    }
-
-                //}
             }
         }
 
-        private void moveUnityChan(Vector3 direction) {
-            GameObject unityChan = GameObject.Find("Player");
-            unityChan.transform.Translate(direction * forwardSpeed * Time.deltaTime);
-        }
+        //private void moveUnityChan(Vector3 direction) {
+        //    GameObject unityChan = GameObject.Find("Player");
+        //    unityChan.transform.Translate(direction);
+        //}
 
         /// <summary>
         /// Check and update the application lifecycle.
